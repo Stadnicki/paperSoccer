@@ -48,15 +48,20 @@ class GameField:
                            (((MARGIN + WIDTH) * self.recentBallPos[0] + MARGIN),
                             ((MARGIN + HEIGHT) * self.recentBallPos[1] + MARGIN)), 7)
 
+
     def mouseClicked(self):
         pos = pygame.mouse.get_pos()
         column = pos[0] // (WIDTH + MARGIN)
         row = pos[1] // (HEIGHT + MARGIN)
         if column < COLUMNS and row < ROWS:
-            self.colourCircle(4)
-            self.field[self.recentBallPos[1]][self.recentBallPos[0]] = 0
-            self.recentBallPos[0] = column
-            self.recentBallPos[1] = row
+            print(abs(column-self.recentBallPos[0]), '   ', abs(row - self.recentBallPos[1]))
+            if(abs(column-self.recentBallPos[0]) <= 1 and
+                    abs(row - self.recentBallPos[1]) <= 1 and
+                    (self.recentBallPos[0] != column or self.recentBallPos[1] != row )):
+                self.colourCircle(4)
+                self.field[self.recentBallPos[1]][self.recentBallPos[0]] = 0
+                self.recentBallPos[0] = column
+                self.recentBallPos[1] = row
 
     def colourCircle(self, colourNum):
         pos = pygame.mouse.get_pos()

@@ -20,6 +20,7 @@ def colourPicker(x):
 # 0 black
 # 1 bright red
 # 2 white
+# 3 green
 # 4 red
 # 5 blue
 class TextField:
@@ -42,8 +43,7 @@ class TextField:
 
     def updateTextField(self, stringNumber):
         self.stringNum = stringNumber
-        self.surface.fill(colourPicker(3))
-        resultText = self.resultFont.render(self.strings[stringNumber], 1, colourPicker(5))
+        resultText = self.resultFont.render(self.strings[stringNumber], 1, colourPicker(5), colourPicker(3))
         self.surface.blit(resultText, ((self.surface.get_width() - resultText.get_width()) / 2,
                                        (self.surface.get_height() - 1.5 * resultText.get_height())))
 
@@ -80,6 +80,7 @@ class GameField:
         # number 4 - player 2 wins
         self.fieldFunction[10][3] = self.fieldFunction[10][4] = self.fieldFunction[10][5] = 4
         self.field[10][3] = self.field[10][4] = self.field[10][5] = 5
+        self.fieldFunction[5][4] = 1 # start field marked as
 
     def draw(self):
         for row in range(ROWS):
@@ -92,8 +93,6 @@ class GameField:
                            (((MARGIN + RADIUS) * self.recentBallPos[0] + MARGIN),
                             ((MARGIN + RADIUS) * self.recentBallPos[1] + MARGIN)), 7)
 
-
-
     def mouseClicked(self):
         pos = pygame.mouse.get_pos()
         column = pos[0] // (RADIUS + MARGIN)
@@ -103,8 +102,12 @@ class GameField:
             if(abs(column-self.recentBallPos[0]) <= 1 and
                     abs(row - self.recentBallPos[1]) <= 1 and
                     (self.recentBallPos[0] != column or self.recentBallPos[1] != row )):
+                print ('clicked field function: ', self.fieldFunction[row][column])
                 self.colourCircle(4)
                 self.field[self.recentBallPos[1]][self.recentBallPos[0]] = 0
+                pygame.draw.line(self.surface, colourPicker(0),
+                                 ((MARGIN + RADIUS)*self.recentBallPos[0]+MARGIN, (MARGIN + RADIUS)*self.recentBallPos[1]+MARGIN),
+                                 ((MARGIN + RADIUS)*column+MARGIN, (MARGIN + RADIUS)*row+MARGIN), 2)
                 self.recentBallPos[0] = column
                 self.recentBallPos[1] = row
                 print('field function number', self.fieldFunction[row][column])
@@ -112,11 +115,12 @@ class GameField:
                     self.textField.updateTextField(2)
                 elif self.fieldFunction[row][column] == 4:
                     self.textField.updateTextField(3)
+                elif self.fieldFunction[row][column] == 1:
+                    pass
                 else:
                     tempStringNum = not self.textField.stringNum
                     self.textField.updateTextField(tempStringNum)
                 self.fieldFunction[row][column] = 1
-
 
     def colourCircle(self, colourNum):
         pos = pygame.mouse.get_pos()
@@ -128,9 +132,6 @@ class GameField:
             self.field[row][column] = colourNum
             print("Clicked on ", pos, " coord: ", row, column)
 
-    def reWhite(self):
-        if self.field[self.previousRow][self.previousColumn] != 0:
-            self.field[self.previousRow][self.previousColumn] = 2
 
 
 def mainLoop():

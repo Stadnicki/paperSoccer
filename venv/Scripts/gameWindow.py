@@ -71,8 +71,14 @@ class GameWindow:
 
 
 def coords_to_num(row, column):
-    print(row, " ", column, " is ", row * COLUMNS + column)
+    # print(row, " ", column, " is ", row * COLUMNS + column)
     return row * COLUMNS + column
+
+
+def in_field(row, column):
+    if 0 <= row < 11 and 0 <= column < 9:
+        return True
+    return False
 
 
 class GameField:
@@ -155,24 +161,39 @@ class GameField:
                            (((MARGIN + RADIUS) * self.recent_ball_pos[0] + MARGIN),
                             ((MARGIN + RADIUS) * self.recent_ball_pos[1] + MARGIN)), 7)
 
-    def forbidden_movement(self, row, column):
-        if (self.recent_ball_pos[1] == row == 0 or self.recent_ball_pos[1] == row == (ROWS - 1)) or \
-                (self.recent_ball_pos[0] == column == 0 or self.recent_ball_pos[0] == column == (COLUMNS - 1)) or \
+    def forbidden_movement(self, row, column, fromRow, fromColumn):
+        print('function forbidden movement, conections ', self.connections[
+                    coords_to_num(row, column)])
+        if (fromRow == row == 0 or fromColumn == row == (ROWS - 1)) or \
+                (fromColumn == column == 0 or fromColumn == column == (COLUMNS - 1)) or \
                 (coords_to_num(row, column) in self.connections[
-                    coords_to_num(self.recent_ball_pos[1], self.recent_ball_pos[0])]) or \
-                ((self.recent_ball_pos[1] == 0 or self.recent_ball_pos[1] == (ROWS - 1)) and (
+                    coords_to_num(fromRow, fromColumn)]) or \
+                ((fromRow == 0 or fromRow == (ROWS - 1)) and (
                         self.field_function[row][column] == 6)) or \
-                ((self.recent_ball_pos[0] == 0 or self.recent_ball_pos[0] == (COLUMNS - 1)) and
+                ((fromColumn == 0 or fromColumn == (COLUMNS - 1)) and
                  (self.field_function[row][column] == 7)):
+            print('from', coords_to_num(fromRow, fromColumn),' to ', coords_to_num(row, column), ' is forbidden')
             return True
+        print('from', coords_to_num(fromRow, fromColumn),' to ', coords_to_num(row, column), ' is not forbidden')
         return False
+
+    def possible_movement(self, row, column):
+        counter = 0
+        adj = [(row-1, column-1), (row-1, column), (row-1, column+1), (row, column-1),
+               (row, column+1), (row+1, column-1), (row+1, column), (row+1, column+1)]
+        for coords in adj:
+            if in_field(coords[0], coords[1]) and not self.forbidden_movement(coords[0], coords[1], row, column):
+                counter += 1
+                # print('from ', row ,'-',column,' to ', coords[0], '-', coords[1], ' is a possible movement')
+
+        print('for ', row, '-',column, ' counter: ', counter)
+        return counter
 
     def mouse_clicked(self):
         pos = pygame.mouse.get_pos()
         column = pos[0] // (RADIUS + MARGIN)
         row = pos[1] // (RADIUS + MARGIN)
-        if column < COLUMNS and row < ROWS:
-            print(abs(column - self.recent_ball_pos[0]), '   ', abs(row - self.recent_ball_pos[1]))
+        if in_field(row, column):
             if (abs(column - self.recent_ball_pos[0]) <= 1 and
                     abs(row - self.recent_ball_pos[1]) <= 1 and
 
@@ -185,7 +206,7 @@ class GameField:
                 print("current: ", coords_to_num(row, column))
                 print("array ", self.connections[coords_to_num(self.recent_ball_pos[1], self.recent_ball_pos[0])])
 
-                if self.forbidden_movement(row, column):
+                if self.forbidden_movement(row, column, self.recent_ball_pos[1], self.recent_ball_pos[0]):
                     return
 
                 line_color = 4
@@ -224,6 +245,13 @@ class GameField:
 
                 print("from ", coords_to_num(self.recent_ball_pos[1], self.recent_ball_pos[0]), "to ",
                       coords_to_num(row, column))
+
+                if self.possible_movement(row, column) == 0:
+                    winner_string = 2
+                    if self.textField.string_num == 1:
+                        winner_string = 3
+                    self.textField.update_text_field(winner_string)
+                    self.endOfGame = True
 
                 self.recent_ball_pos[0] = column
                 self.recent_ball_pos[1] = row

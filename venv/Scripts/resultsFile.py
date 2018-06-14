@@ -5,9 +5,9 @@ class ResultsFile:
     def __init__(self, file_name):
         self.file_name = file_name
 
-    def add_result(self, str):
+    def add_result(self, content):
         with open(self.file_name, "a+") as f:
-            f.write(str+'\n')
+            f.write(content+'\n')
             f.close()
 
     def get_result(self):

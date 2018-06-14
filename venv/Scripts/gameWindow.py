@@ -81,6 +81,14 @@ def in_field(row, column):
     return False
 
 
+def in_range(row, column, from_row, from_column):
+    if in_field(row, column) and (abs(column - from_column) <= 1 and
+                                  abs(row - from_row) <= 1 and (from_column != column or from_row != row)):
+        return True
+    else:
+        return False
+
+
 class GameField:
     def __init__(self, surface, text_field):
         self.textField = text_field
@@ -161,108 +169,108 @@ class GameField:
                            (((MARGIN + RADIUS) * self.recent_ball_pos[0] + MARGIN),
                             ((MARGIN + RADIUS) * self.recent_ball_pos[1] + MARGIN)), 7)
 
-    def forbidden_movement(self, row, column, fromRow, fromColumn):
-        print('function forbidden movement, conections ', self.connections[
-                    coords_to_num(row, column)])
-        if (fromRow == row == 0 or fromColumn == row == (ROWS - 1)) or \
-                (fromColumn == column == 0 or fromColumn == column == (COLUMNS - 1)) or \
+    def forbidden_movement(self, row, column, from_row, from_column):
+        print('function forbidden movement, connections ', self.connections[
+            coords_to_num(row, column)])
+        if (from_row == row == 0 or from_column == row == (ROWS - 1)) or \
+                (from_column == column == 0 or from_column == column == (COLUMNS - 1)) or \
                 (coords_to_num(row, column) in self.connections[
-                    coords_to_num(fromRow, fromColumn)]) or \
-                ((fromRow == 0 or fromRow == (ROWS - 1)) and (
+                    coords_to_num(from_row, from_column)]) or \
+                ((from_row == 0 or from_row == (ROWS - 1)) and (
                         self.field_function[row][column] == 6)) or \
-                ((fromColumn == 0 or fromColumn == (COLUMNS - 1)) and
+                ((from_column == 0 or from_column == (COLUMNS - 1)) and
                  (self.field_function[row][column] == 7)):
-            print('from', coords_to_num(fromRow, fromColumn),' to ', coords_to_num(row, column), ' is forbidden')
+            print('from', coords_to_num(from_row, from_column), ' to ', coords_to_num(row, column), ' is forbidden')
             return True
-        print('from', coords_to_num(fromRow, fromColumn),' to ', coords_to_num(row, column), ' is not forbidden')
+        print('from', coords_to_num(from_row, from_column), ' to ', coords_to_num(row, column), ' is not forbidden')
         return False
 
     def possible_movement(self, row, column):
         counter = 0
-        adj = [(row-1, column-1), (row-1, column), (row-1, column+1), (row, column-1),
-               (row, column+1), (row+1, column-1), (row+1, column), (row+1, column+1)]
-        for coords in adj:
-            if in_field(coords[0], coords[1]) and not self.forbidden_movement(coords[0], coords[1], row, column):
+        adj = [(row - 1, column - 1), (row - 1, column), (row - 1, column + 1), (row, column - 1),
+               (row, column + 1), (row + 1, column - 1), (row + 1, column), (row + 1, column + 1)]
+        for coordinates in adj:
+            if in_field(coordinates[0], coordinates[1]) and not self.forbidden_movement(coordinates[0], coordinates[1], row, column):
                 counter += 1
-                # print('from ', row ,'-',column,' to ', coords[0], '-', coords[1], ' is a possible movement')
 
-        print('for ', row, '-',column, ' counter: ', counter)
+        print('for ', row, '-', column, ' counter: ', counter)
         return counter
+
+    def select_line_color(self):
+        line_color = 4
+        if self.textField.string_num == 1:
+            line_color = 5
+        return line_color
+
+    def draw_movement_line(self, row, column, from_row, from_column):
+        self.field[from_row][from_column] = 0
+        pygame.draw.line(self.surface, colour_picker(self.select_line_color()),
+                         ((MARGIN + RADIUS) * from_column + MARGIN,
+                          (MARGIN + RADIUS) * from_row + MARGIN),
+                         ((MARGIN + RADIUS) * column + MARGIN, (MARGIN + RADIUS) * row + MARGIN), 2)
+
+    def long_movement(self, row, column):
+        if self.field_function[row][column] in [1, 6, 7]:
+            return True
+        else:
+            return False
+
+    def check_if_goal(self, row, column):
+        if self.field_function[row][column] == 3:
+            self.textField.update_text_field(2)
+            return True
+        elif self.field_function[row][column] == 4:
+            self.textField.update_text_field(3)
+            return True
+        return False
+
+    def change_player(self):
+        temp_string_num = not self.textField.string_num
+        self.textField.update_text_field(temp_string_num)
+
+    def add_connection(self, row, column, from_row, from_column):
+        self.connections[coords_to_num(row, column)].append(
+            coords_to_num(from_row, from_column))
+
+        self.connections[coords_to_num(from_row, from_column)].append(
+            coords_to_num(row, column))
+
+    def if_blocked(self, row, column):
+        if self.possible_movement(row, column) == 0:
+            winner_string = 2
+            if self.textField.string_num == 1:
+                winner_string = 3
+            self.textField.update_text_field(winner_string)
+            self.endOfGame = True
+
+    def movement_processing(self, row, column):
+        if in_range(row, column, self.recent_ball_pos[1], self.recent_ball_pos[0]):
+            print('clicked field function number: ', self.field_function[row][column])
+
+            # if chosen movement is forbidden then do nothing
+            if self.forbidden_movement(row, column, self.recent_ball_pos[1], self.recent_ball_pos[0]):
+                return
+
+            self.draw_movement_line(row, column, self.recent_ball_pos[1], self.recent_ball_pos[0])
+
+            if self.check_if_goal(row, column):
+                self.endOfGame = True
+            elif self.long_movement(row, column):
+                pass
+            else:
+                self.change_player()
+
+            self.field_function[row][column] = 1
+            self.add_connection(row, column, self.recent_ball_pos[1], self.recent_ball_pos[0])
+            self.if_blocked(row, column)
+            self.recent_ball_pos[0] = column
+            self.recent_ball_pos[1] = row
 
     def mouse_clicked(self):
         pos = pygame.mouse.get_pos()
         column = pos[0] // (RADIUS + MARGIN)
         row = pos[1] // (RADIUS + MARGIN)
-        if in_field(row, column):
-            if (abs(column - self.recent_ball_pos[0]) <= 1 and
-                    abs(row - self.recent_ball_pos[1]) <= 1 and
-
-                    (self.recent_ball_pos[0] != column or self.recent_ball_pos[1] != row)):
-                print('clicked field function: ', self.field_function[row][column])
-
-                coords_to_num(row, column)
-                print('field function number', self.field_function[row][column])
-
-                print("current: ", coords_to_num(row, column))
-                print("array ", self.connections[coords_to_num(self.recent_ball_pos[1], self.recent_ball_pos[0])])
-
-                if self.forbidden_movement(row, column, self.recent_ball_pos[1], self.recent_ball_pos[0]):
-                    return
-
-                line_color = 4
-                if self.textField.string_num == 1:
-                    line_color = 5
-
-                self.colour_circle(4)
-                self.field[self.recent_ball_pos[1]][self.recent_ball_pos[0]] = 0
-                pygame.draw.line(self.surface, colour_picker(line_color),
-                                 ((MARGIN + RADIUS) * self.recent_ball_pos[0] + MARGIN,
-                                  (MARGIN + RADIUS) * self.recent_ball_pos[1] + MARGIN),
-                                 ((MARGIN + RADIUS) * column + MARGIN, (MARGIN + RADIUS) * row + MARGIN), 2)
-
-                if self.field_function[row][column] == 3:
-                    self.textField.update_text_field(2)
-                    self.endOfGame = True
-                elif self.field_function[row][column] == 4:
-                    self.textField.update_text_field(3)
-                    self.endOfGame = True
-                elif self.field_function[row][column] == 1:
-                    pass
-                elif self.field_function[row][column] == 6 or self.field_function[row][column] == 7:
-                    pass
-                else:
-                    temp_string_num = not self.textField.string_num
-                    self.textField.update_text_field(temp_string_num)
-                self.field_function[row][column] = 1
-
-                self.connections[coords_to_num(row, column)].append(
-                    coords_to_num(self.recent_ball_pos[1], self.recent_ball_pos[0]))
-                print("from ", coords_to_num(row, column), "to ",
-                      coords_to_num(self.recent_ball_pos[1], self.recent_ball_pos[0]))
-
-                self.connections[coords_to_num(self.recent_ball_pos[1], self.recent_ball_pos[0])].append(
-                    coords_to_num(row, column))
-
-                print("from ", coords_to_num(self.recent_ball_pos[1], self.recent_ball_pos[0]), "to ",
-                      coords_to_num(row, column))
-
-                if self.possible_movement(row, column) == 0:
-                    winner_string = 2
-                    if self.textField.string_num == 1:
-                        winner_string = 3
-                    self.textField.update_text_field(winner_string)
-                    self.endOfGame = True
-
-                self.recent_ball_pos[0] = column
-                self.recent_ball_pos[1] = row
-
-    def colour_circle(self, colour_num):
-        pos = pygame.mouse.get_pos()
-        column = pos[0] // (RADIUS + MARGIN)
-        row = pos[1] // (RADIUS + MARGIN)
-        if column < COLUMNS and row < ROWS:
-            self.field[row][column] = colour_num
-            print("Clicked on ", pos, " coord: ", row, column)
+        self.movement_processing(row, column)
 
 
 def enter_results(text_field, res_file):
@@ -280,7 +288,7 @@ def main_loop(nicks):
     text_field.start()
     while not exit_flag:
         for event in pygame.event.get():
-            if event.type == pygame.MOUSEBUTTONDOWN and game_field.endOfGame == True:
+            if event.type == pygame.MOUSEBUTTONDOWN and game_field.endOfGame is True:
                 enter_results(text_field, res_file)
                 main_loop(nicks)
             if event.type == pygame.QUIT:

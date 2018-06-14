@@ -5,7 +5,7 @@ from resultsFile import *
 
 class HintEntry(Text):
     def __init__(self, master=None, hint=''):
-        super().__init__(master, bd = 5, height=1, font=("Georgia", 25), bg='black',
+        super().__init__(master, bd=5, height=1, font=("Georgia", 25), bg='black',
                          fg='white', selectbackground='black', insertbackground='white',
                          padx=10, pady=10)
         self.master = master
@@ -33,7 +33,7 @@ class HintEntry(Text):
 
     def focus_out(self):
         print('focus out')
-        if self.get("1.0", END).strip() == self.hint or self.get("1.0", END).strip()  == '':
+        if self.get("1.0", END).strip() == self.hint or self.get("1.0", END).strip() == '':
             self.insert_hint()
 
     def get_name(self):
@@ -51,14 +51,14 @@ class Menu(Frame):
         self.second_player = HintEntry(self, 'Second player')
         self.second_player.grid(row=1, column=0, pady=(0, 5))
         self.start_button = Button(self, text='START GAME', height=1, bd=5, command=self.start_game, bg='darkgreen',
-                                    fg='white',  font=("Georgia", 25), activebackground='green')
-        self.start_button.grid(row=3, column=0, sticky=E+W, pady=(0, 5))
+                                   fg='white', font=("Georgia", 25), activebackground='green')
+        self.start_button.grid(row=3, column=0, sticky=E + W, pady=(0, 5))
         self.results_button = Button(self, text='RESULTS', height=1, bd=5, command=self.show_results, bg='darkblue',
-                                    fg='white',  font=("Georgia", 25), activebackground='dodgerblue')
+                                     fg='white', font=("Georgia", 25), activebackground='dodgerblue')
         self.results_button.grid(row=4, column=0, sticky=E + W, pady=(0, 5))
         self.exit_button = Button(self, text='EXIT GAME', height=1, bd=5, fg='white', command=self.master.destroy,
                                   bg='darkred', font=('Georgia', 25), activebackground='red')
-        self.exit_button.grid(row=5, column=0, sticky=E+W)
+        self.exit_button.grid(row=5, column=0, sticky=E + W)
         self.first_name = ''
         self.second_name = ''
 
@@ -94,6 +94,7 @@ class Menu(Frame):
         scr.pack(side="right", fill="y", expand=False)
         res_field.pack(side="left", fill="both", expand=True)
 
+
 def main():
     root = Tk()
     Menu(root)
@@ -102,4 +103,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

@@ -160,18 +160,18 @@ class GameField:
                 pygame.draw.circle(self.surface, colour,
                                    (((MARGIN + RADIUS) * column + MARGIN),
                                     ((MARGIN + RADIUS) * row + MARGIN)), 7)
+        self.color_current_player()
 
-        # color recent move field
+    def color_current_player(self):
+        # color current field
         current_player_color = 4
-        if self.textField.string_num == 1:
+        if self.textField.string_num in [1, 2]:
             current_player_color = 5
         pygame.draw.circle(self.surface, colour_picker(current_player_color),
                            (((MARGIN + RADIUS) * self.recent_ball_pos[0] + MARGIN),
                             ((MARGIN + RADIUS) * self.recent_ball_pos[1] + MARGIN)), 7)
 
     def forbidden_movement(self, row, column, from_row, from_column):
-        print('function forbidden movement, connections ', self.connections[
-            coords_to_num(row, column)])
         if (from_row == row == 0 or from_column == row == (ROWS - 1)) or \
                 (from_column == column == 0 or from_column == column == (COLUMNS - 1)) or \
                 (coords_to_num(row, column) in self.connections[
@@ -180,9 +180,9 @@ class GameField:
                         self.field_function[row][column] == 6)) or \
                 ((from_column == 0 or from_column == (COLUMNS - 1)) and
                  (self.field_function[row][column] == 7)):
-            print('from', coords_to_num(from_row, from_column), ' to ', coords_to_num(row, column), ' is forbidden')
+            # print('from', coords_to_num(from_row, from_column), ' to ', coords_to_num(row, column), ' is forbidden')
             return True
-        print('from', coords_to_num(from_row, from_column), ' to ', coords_to_num(row, column), ' is not forbidden')
+        # print('from', coords_to_num(from_row, from_column), ' to ', coords_to_num(row, column), ' is not forbidden')
         return False
 
     def possible_movement(self, row, column):
@@ -210,7 +210,7 @@ class GameField:
                          ((MARGIN + RADIUS) * column + MARGIN, (MARGIN + RADIUS) * row + MARGIN), 2)
 
     def long_movement(self, row, column):
-        if self.field_function[row][column] in [1, 6, 7]:
+        if self.field_function[row][column] in [1, 6, 7, 8]:
             return True
         else:
             return False
@@ -237,9 +237,9 @@ class GameField:
 
     def if_blocked(self, row, column):
         if self.possible_movement(row, column) == 0:
-            winner_string = 2
+            winner_string = 3
             if self.textField.string_num == 1:
-                winner_string = 3
+                winner_string = 2
             self.textField.update_text_field(winner_string)
             self.endOfGame = True
 
@@ -256,13 +256,17 @@ class GameField:
             if self.check_if_goal(row, column):
                 self.endOfGame = True
             elif self.long_movement(row, column):
+                print("long movement")
                 pass
             else:
+                print("changing player")
                 self.change_player()
 
             self.field_function[row][column] = 1
             self.add_connection(row, column, self.recent_ball_pos[1], self.recent_ball_pos[0])
+
             self.if_blocked(row, column)
+
             self.recent_ball_pos[0] = column
             self.recent_ball_pos[1] = row
 

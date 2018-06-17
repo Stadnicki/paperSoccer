@@ -7,7 +7,7 @@ class ResultsFile:
 
     def add_result(self, content):
         with open(self.file_name, "a+") as f:
-            f.write(content+'\n')
+            f.write(content+'\n\n')
             f.close()
 
     def get_result(self):

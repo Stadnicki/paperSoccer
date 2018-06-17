@@ -3,7 +3,8 @@ import random
 import gameMenu
 from config import *
 from resultsFile import *
-from time import gmtime, strftime
+from time import gmtime, strftime, time
+
 
 
 class TextField:
@@ -97,6 +98,8 @@ class GameField:
         self.field_function = []
         self.connections = []
         self.recent_ball_pos = [4, 5]
+        self.start_time = time()
+        self.game_time = ""
         self.endOfGame = False
         self.prepare()
 
@@ -130,18 +133,18 @@ class GameField:
         for row in range(ROWS - 1):
             pygame.draw.line(self.surface, colour_picker(6),
                              (MARGIN, (MARGIN + RADIUS) * row + MARGIN),
-                             (MARGIN, (MARGIN + RADIUS) * (row + 1) + MARGIN), 2)
+                             (MARGIN, (MARGIN + RADIUS) * (row + 1) + MARGIN), SIDELINE_TH)
             pygame.draw.line(self.surface, colour_picker(6),
                              ((MARGIN + RADIUS) * (COLUMNS - 1) + MARGIN, (MARGIN + RADIUS) * row + MARGIN),
-                             ((MARGIN + RADIUS) * (COLUMNS - 1) + MARGIN, (MARGIN + RADIUS) * (row + 1) + MARGIN), 2)
+                             ((MARGIN + RADIUS) * (COLUMNS - 1) + MARGIN, (MARGIN + RADIUS) * (row + 1) + MARGIN), SIDELINE_TH)
 
         for column in range(COLUMNS - 1):
             pygame.draw.line(self.surface, colour_picker(6),
                              ((MARGIN + RADIUS) * column + MARGIN, MARGIN),
-                             ((MARGIN + RADIUS) * (column + 1) + MARGIN, MARGIN), 2)
+                             ((MARGIN + RADIUS) * (column + 1) + MARGIN, MARGIN), SIDELINE_TH)
             pygame.draw.line(self.surface, colour_picker(6),
                              ((MARGIN + RADIUS) * column + MARGIN, (MARGIN + RADIUS) * (ROWS - 1) + MARGIN),
-                             ((MARGIN + RADIUS) * (column + 1) + MARGIN, (MARGIN + RADIUS) * (ROWS - 1) + MARGIN), 2)
+                             ((MARGIN + RADIUS) * (column + 1) + MARGIN, (MARGIN + RADIUS) * (ROWS - 1) + MARGIN), SIDELINE_TH)
 
         # number 3 - player 1 wins
         self.field_function[0][3] = self.field_function[0][4] = self.field_function[0][5] = 3
@@ -207,7 +210,7 @@ class GameField:
         pygame.draw.line(self.surface, colour_picker(self.select_line_color()),
                          ((MARGIN + RADIUS) * from_column + MARGIN,
                           (MARGIN + RADIUS) * from_row + MARGIN),
-                         ((MARGIN + RADIUS) * column + MARGIN, (MARGIN + RADIUS) * row + MARGIN), 2)
+                         ((MARGIN + RADIUS) * column + MARGIN, (MARGIN + RADIUS) * row + MARGIN), MOVEMENT_LINE)
 
     def long_movement(self, row, column):
         if self.field_function[row][column] in [1, 6, 7, 8]:
@@ -243,6 +246,9 @@ class GameField:
             self.textField.update_text_field(winner_string)
             self.endOfGame = True
 
+    def get_game_time(self):
+        return str(round(time()-self.start_time))
+
     def movement_processing(self, row, column):
         if in_range(row, column, self.recent_ball_pos[1], self.recent_ball_pos[0]):
             print('clicked field function number: ', self.field_function[row][column])
@@ -277,10 +283,11 @@ class GameField:
         self.movement_processing(row, column)
 
 
-def enter_results(text_field, res_file):
+def enter_results(text_field, game_field, res_file):
     if text_field.string_num == 2 or text_field.string_num == 3:
-        res_file.add_result(strftime("%Y-%m-%d %H:%M:%S", gmtime()) + " - " +
-                            text_field.get_winner() + " won against " + text_field.get_loser())
+        res_file.add_result( text_field.get_winner() + " won against " + text_field.get_loser() +
+                             "\n\t" + "-- date: " + strftime("%Y-%m-%d %H:%M:%S", gmtime())+
+                             "\n\t" + "-- game time: " + game_field.get_game_time() + " s")
 
 
 def main_loop(nicks):
@@ -293,16 +300,16 @@ def main_loop(nicks):
     while not exit_flag:
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONDOWN and game_field.endOfGame is True:
-                enter_results(text_field, res_file)
+                enter_results(text_field,game_field, res_file)
                 main_loop(nicks)
             if event.type == pygame.QUIT:
-                enter_results(text_field, res_file)
+                enter_results(text_field, game_field, res_file)
                 pygame.quit()
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 game_field.mouse_clicked()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_BACKSPACE:
-                    enter_results(text_field, res_file)
+                    enter_results(text_field, game_field, res_file)
                     pygame.quit()
                     gameMenu.main()
                 elif event.key == pygame.K_r:

@@ -3,6 +3,8 @@ MARGIN = 30
 ROWS = 11
 COLUMNS = 9
 TEXTPOS = ((MARGIN + RADIUS) * 11 + MARGIN)
+SIDELINE_TH = 4
+MOVEMENT_LINE = 3
 
 
 def colour_picker(x):
